@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f5f0">
+  <title>Fotoğraf Bahçem</title>
+  <style>
+    :root{--bg:#f7f5f0;--ink:#25251f;--muted:#77776f;--card:#fff;--accent:#d94f37;--line:#e7e3db}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    header{position:sticky;top:0;z-index:5;background:rgba(247,245,240,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+    .bar{max-width:1100px;margin:auto;padding:14px 16px;display:flex;align-items:center;gap:12px}
+    .brand{font-size:1.12rem;font-weight:850;letter-spacing:-.04em;white-space:nowrap}
+    .brand span{color:var(--accent)}
+    .search{flex:1;min-width:0;border:0;background:#eae7e0;border-radius:999px;padding:12px 15px;font:inherit;outline:none}
+    button,.upload-label{font:inherit;border:0;border-radius:999px;padding:11px 15px;font-weight:700;cursor:pointer}
+    .primary{background:var(--ink);color:white}.soft{background:#eae7e0;color:var(--ink)}
+    main{max-width:1100px;margin:auto;padding:22px 14px 50px}
+    .intro{padding:14px 5px 24px}
+    .eyebrow{font-size:.78rem;text-transform:uppercase;letter-spacing:.14em;color:var(--accent);font-weight:800}
+    h1{font-size:clamp(2rem,7vw,3.6rem);letter-spacing:-.06em;line-height:1.05;margin:10px 0}
+    .intro p{color:var(--muted);margin:0;max-width:600px}
+    .tools{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:4px 4px 20px}
+    .count{color:var(--muted);font-size:.9rem;margin-left:auto}
+    .gallery{columns:2;column-gap:12px}
+    .tile{break-inside:avoid;margin:0 0 12px;background:var(--card);border-radius:18px;overflow:hidden;box-shadow:0 2px 10px #2620140a}
+    .tile img{display:block;width:100%;height:auto;min-height:90px;object-fit:cover;background:#e8e5df}
+    .caption{padding:10px 12px 12px;font-size:.9rem;overflow-wrap:anywhere}
+    .caption small{display:block;color:var(--muted);margin-top:3px}
+    .empty{padding:30px 20px;text-align:center;color:var(--muted);background:#eeebe4;border-radius:18px;column-span:all}
+    .empty b{display:block;color:var(--ink);margin-bottom:5px}
+    .note{font-size:.82rem;color:var(--muted);padding:22px 5px 0}
+    dialog{border:0;border-radius:22px;padding:22px;width:min(92vw,430px);box-shadow:0 20px 80px #0003}
+    dialog::backdrop{background:#1118;backdrop-filter:blur(3px)}
+    dialog h2{margin-top:0}
+    label.field{display:block;font-size:.9rem;font-weight:700;margin:12px 0}
+    input[type=text],input[type=password],textarea{width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;font:inherit;margin-top:5px}
+    textarea{resize:vertical}
+    .dialog-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+    @media(min-width:620px){.gallery{columns:3;column-gap:16px}.tile{margin-bottom:16px}.bar{padding:16px 22px}main{padding:30px 22px 60px}}
+    @media(min-width:900px){.gallery{columns:4}}
+    @media(max-width:400px){.brand{font-size:1rem}.bar{gap:8px}.search{padding:11px 12px}.bar button{padding:10px 12px}}
+  </style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div class="brand">foto<span>bahçem</span></div>
+    <input id="search" class="search" type="search" placeholder="Fotoğraflarda ara…" aria-label="Fotoğraflarda ara">
+    <button class="primary" id="openUpload">＋ Ekle</button>
+  </div>
+</header>
+<main>
+  <section class="intro">
+    <div class="eyebrow">Kendi görsel koleksiyonun</div>
+    <h1>Güzel şeyleri<br>biriktir.</h1>
+    <p>Fotoğraflarını düzenle, ilham veren kareleri keşfet. Bu başlangıç sürümünde eklediğin fotoğraflar yalnızca bu cihazdaki tarayıcıda saklanır.</p>
+  </section>
+  <div class="tools">
+    <button class="soft" id="allBtn">Tüm fotoğraflar</button>
+    <button class="soft" id="clearBtn">Bu cihazdaki fotoğrafları sil</button>
+    <span class="count" id="count">0 fotoğraf</span>
+  </div>
+  <section id="gallery" class="gallery" aria-live="polite"></section>
+  <p class="note">Not: Bu taslakta fotoğraflar herkese açık bir sunucuya yüklenmez. Siteyi internette yayınlamak, fotoğrafları diğer ziyaretçilere otomatik olarak göstermez. Bunun için sonraki kurulumda çevrim içi depolama ve yalnızca sahibine açık yükleme izni gerekir.</p>
+</main>
+
+<dialog id="uploadDialog">
+  <form id="uploadForm">
+    <h2>Fotoğraf ekle</h2>
+    <p style="color:#77776f;margin-top:-5px">Telefonundan bir veya birkaç fotoğraf seçebilirsin.</p>
+    <label class="field">Fotoğraflar
+      <input id="photos" type="file" accept="image/*" multiple required style="display:block;width:100%;margin-top:8px">
+    </label>
+    <label class="field">Açıklama (isteğe bağlı)
+      <textarea id="caption" rows="2" maxlength="180" placeholder="Bu fotoğraf hakkında…"></textarea>
+    </label>
+    <div class="dialog-actions">
+      <button class="soft" type="button" id="cancelUpload">Vazgeç</button>
+      <button class="primary" type="submit">Fotoğrafları ekle</button>
+    </div>
+  </form>
+</dialog>
+<script>
+const DB_NAME='fotobahcem-local-v1', STORE='photos';
+const gallery=document.getElementById('gallery');
+const count=document.getElementById('count');
+const dialog=document.getElementById('uploadDialog');
+let db;
+function openDB(){
+  return new Promise((resolve,reject)=>{
+    const req=indexedDB.open(DB_NAME,1);
+    req.onupgradeneeded=()=>req.result.createObjectStore(STORE,{keyPath:'id',autoIncrement:true});
+    req.onsuccess=()=>{db=req.result;resolve(db)};
+    req.onerror=()=>reject(req.error);
+  });
+}
+function allPhotos(){
+  return new Promise((resolve,reject)=>{
+    const req=db.transaction(STORE,'readonly').objectStore(STORE).getAll();
+    req.onsuccess=()=>resolve(req.result.reverse()); req.onerror=()=>reject(req.error);
+  });
+}
+function addPhoto(item){
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction(STORE,'readwrite');
+    tx.objectStore(STORE).add(item);
+    tx.oncomplete=resolve; tx.onerror=()=>reject(tx.error);
+  });
+}
+function deleteAll(){
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).clear();
+    tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);
+  });
+}
+function safeText(text){return String(text).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+async function render(){
+  const items=await allPhotos();
+  const term=document.getElementById('search').value.trim().toLocaleLowerCase('tr');
+  const filtered=items.filter(x=>(x.caption||'').toLocaleLowerCase('tr').includes(term)||x.name.toLocaleLowerCase('tr').includes(term));
+  count.textContent=items.length+' fotoğraf';
+  if(!filtered.length){
+    gallery.innerHTML='<div class="empty"><b>'+(items.length?'Sonuç bulunamadı':'Henüz fotoğraf yok')+'</b>'+(items.length?'Başka bir kelime deneyebilirsin.':'“＋ Ekle” düğmesine dokunarak ilk fotoğrafını ekle.')+'</div>';
+    return;
+  }
+  gallery.innerHTML='';
+  for(const item of filtered){
+    const url=URL.createObjectURL(item.blob);
+    const card=document.createElement('article');card.className='tile';
+    card.innerHTML='<img loading="lazy" alt="'+safeText(item.name)+'"><div class="caption">'+safeText(item.caption||item.name)+'<small>'+new Date(item.created).toLocaleDateString('tr-TR')+'</small></div>';
+    card.querySelector('img').src=url;
+    gallery.appendChild(card);
+  }
+}
+document.getElementById('openUpload').addEventListener('click',()=>dialog.showModal());
+document.getElementById('cancelUpload').addEventListener('click',()=>dialog.close());
+document.getElementById('search').addEventListener('input',render);
+document.getElementById('allBtn').addEventListener('click',()=>{document.getElementById('search').value='';render();});
+document.getElementById('clearBtn').addEventListener('click',async()=>{
+  if(confirm('Bu tarayıcıda saklanan tüm fotoğraflar silinsin mi?')){await deleteAll();render();}
+});
+document.getElementById('uploadForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const files=[...document.getElementById('photos').files];
+  const caption=document.getElementById('caption').value.trim();
+  for(const file of files){
+    if(!file.type.startsWith('image/')) continue;
+    await addPhoto({name:file.name,blob:file,caption,created:Date.now()});
+  }
+  e.target.reset();dialog.close();await render();
+});
+openDB().then(render).catch(()=>{gallery.innerHTML='<div class="empty"><b>Depolama açılamadı</b>Tarayıcıda dosyayı açmayı veya başka bir tarayıcı denemeyi deneyebilirsin.</div>';});
+</script>
+</body>
+</html>
